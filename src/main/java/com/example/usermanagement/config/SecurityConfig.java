@@ -27,14 +27,14 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Disable CSRF for testing (enable in production)
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/public/**").permitAll() // Public endpoints
-                        .anyRequest().authenticated())
+                        .requestMatchers("/api/auth/**").permitAll() // Public endpoints
+                        .anyRequest().authenticated()) // all other requests require authentication
                 .httpBasic(withDefaults()); // Enable Basic Authentication
 
         return http.build();
     }
 
-    // Step 3: Define UserDetailsService for in-memory authentication
+    // Define UserDetailsService for in-memory authentication
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         var userDetailsManager = new InMemoryUserDetailsManager();

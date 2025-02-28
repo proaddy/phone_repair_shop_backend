@@ -1,17 +1,25 @@
 package com.example.usermanagement.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.http.HttpStatus;
-//import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+//import org.springframework.web.bind.annotation.CrossOrigin;
+//import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.usermanagement.services.PasswordService;
 import com.example.usermanagement.services.UserService;
 import com.example.usermanagement.UserEntity;
+import com.example.usermanagement.dto.PasswordResetConfirmDTO;
+import com.example.usermanagement.dto.PasswordResetRequestDTO;
 import com.example.usermanagement.dto.UserDTO;
 import com.example.usermanagement.dto.UserLoginDTO;
 import com.example.usermanagement.dto.UserResponseDTO;
@@ -22,6 +30,9 @@ public class UserController {
 	
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private PasswordService passwordService;
 
 	@PutMapping("/{id}")
 	public UserResponseDTO updateUser(@PathVariable Long id, @RequestBody UserUpdateDTO updateDto) {
@@ -33,7 +44,7 @@ public class UserController {
 	    return responseDto;
 	}
 	
-	// ---------- Authentication APIs ----------
+	// ---------- Authentication APIs / Available APIs with the anyrole being logged in ----------
 	@PostMapping("/api/auth/register")
 	public UserResponseDTO registerUser(@RequestBody UserDTO userdto) {
 		// entity
@@ -65,20 +76,31 @@ public class UserController {
 	
 	
 	@PostMapping("/api/auth/password-reset/request")
-	public UserResponseDTO<String> requestPasswordReset(@RequestBody)
+	public String requestPasswordReset(@RequestBody PasswordResetRequestDTO requestdto) {
+		return passwordService.initiatePasswordReset(requestdto.getEmail());
+	}
 	
-//	@PostMapping("/api/auth/logout") // optional
 	@PostMapping("/api/auth/password-reset/confirm")
-	@PostMapping("/api/users/login/google")
+	public String requestPasswordConfirm(@RequestBody PasswordResetConfirmDTO confirmdto) {
+		return passwordService.confirmPasswordReset(confirmdto.getToken(), confirmdto.getNewPassword());
+	}
 	
+	//	@PostMapping("/api/auth/logout") // optional
+//	@PostMapping("/api/users/login/google")
+	
+	@GetMapping("/api/users/all")
+	@PreAuthorize("hasRole('ADMIN')")
+	public List<UserEntity> getAllUsers() {
+		return userService.getAllUsers();
+	}
 	
 	/*
 	 * ---------- Authentication APIs ----------
-	 * api/auth/register -> post -> register new user -> public (no role required)
-	 * api/auth/login -> post -> login user and return authentication token -> public (no role required)
+	 * completed: api/auth/register -> post -> register new user -> public (no role required)
+	 * completed: api/auth/login -> post -> login user and return authentication token -> public (no role required)
+	 * completed: api/auth/password-reset/request -> post -> request password reset link or token to user -> public (no role required)
+	 * completed: api/auth/password-reset/confirm -> post -> confirm and set new password -> public (no role required)
 	 * api/auth/logout -> post -> invalidate token and logout -> user, admin, technician
-	 * api/auth/password-reset/request -> post -> request password reset link or token to user -> public (no role required)
-	 * api/auth/password-reset/confirm -> post -> confirm and set new password -> public (no role required)
 	 * api/users/login/google -> post -> login user via google OAuth -> public (no role required)
 	 * 
 	 * ---------- User Profile Management APIs ---------- 

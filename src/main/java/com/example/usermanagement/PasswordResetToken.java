@@ -21,7 +21,7 @@ public class PasswordResetToken {
 	@Column(nullable = false, unique = true)
 	private String token;
 	
-	@Column(nullable = false)
+	@Column(name = "expiration_date", nullable = false)
 	private LocalDateTime expirationDate;
 	
 	@ManyToOne
